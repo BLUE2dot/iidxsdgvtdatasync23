@@ -1,0 +1,65 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf8"/>
+    <!--
+        必要に応じて、次のメタ タグでコンテンツ セキュリティ ポリシーをカスタマイズします。default-src に 'unsafe-inline' を追加して、インライン JavaScript を有効にします。
+        詳細については、http://go.microsoft.com/fwlink/?LinkID=617521 を参照してください。
+    -->
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *">
+        
+        <meta name="format-detection" content="telephone=no">
+        <meta name="msapplication-tap-highlight" content="no">
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+        <link rel="stylesheet" type="text/css" href="css/index.css">
+        <title>iidxsdgvtdatasync</title>
+    </head>
+    <body>
+        <div class="frame">
+            <div class="header">
+                <div class="title">IIDX SDGVT データ同期ツール</div>
+            </div>
+            <div class="option"></div>
+            <div class="mainview">
+                <div id="content.main" class="content">
+                    <div class="menutitle">データ同期</div>
+                    <div id="loginregist">
+                        スコアツール側のログイン情報を保存してください。
+                        <table id="logintable" class="logintable">
+                            <tbody>
+                                <tr>
+                                    <td>ID</td>
+                                    <td><input type="text" id="userid" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Password</td>
+                                    <td><input type="password" id="password" /></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="control">
+                        <input type="button" value="ログイン情報を保存する" id="control.saveid" />
+                    </div>
+                    <div class="control">
+                        <input type="button" value="ログイン情報を削除する" id="control.removeid" />
+                    </div>
+                    <div class="control">
+                        <input type="button" value="データ同期を開始する" id="control.run"/>
+                    </div>
+                    <div class="control">
+                        <input type="button" value="データ同期を中止する" id="control.cancel" />
+                    </div>
+                    <div class="control" id="progressview"></div>
+                </div>
+            </div>
+            <div id="message" class="messageview"></div>
+        </div>
+        <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="scripts/platformOverrides.js"></script>
+        <script type="text/javascript" src="scripts/const.js"></script>
+        <script type="text/javascript" src="scripts/index.js"></script>
+        <script type="text/javascript" src="scripts/getsongdic.js"></script>
+        <script type="text/javascript" src="scripts/application.js"></script>
+    </body>
+</html>

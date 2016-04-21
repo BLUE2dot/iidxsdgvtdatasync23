@@ -1,0 +1,138 @@
+body {
+    -webkit-touch-callout: none;
+    -webkit-text-size-adjust: none;
+    -webkit-user-select: none;
+    background-color:#32383d;
+    font-family: 'RobotoRegular', 'Droid Sans', 'Segoe UI', Segoe, 'San Francisco', 'Helvetica Neue', Helvetica, Arial, Geneva, sans-serif;
+    font-size:12px;
+    margin: 0px;
+}
+
+@media screen and (orientation: portrait) {
+}
+
+@media screen and (orientation: landscape) {
+}
+
+.frame
+{
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    left: 0px;
+    top: 0px;
+    margin: 0px;
+    color: #FFFFFF;
+}
+
+.header
+{
+    width: 100%;
+    height: 6%;
+}
+
+.title
+{
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    background-color: #FFFFFF;
+    font-size: 18pt;
+    color: #3333CC;
+}
+
+.option
+{
+    color: #FF0000;
+    background-color: #FFCC33;
+}
+
+.messageview
+{
+    height: 3%;
+    padding: 2%;
+    background-color: #FFFFCC;
+    border-style: solid;
+    border-width: 1px;
+    font-weight: bold;
+}
+
+.menuarea
+{
+    width: 100%;
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+    border-bottom-color: #FFFFFF;
+}
+
+.menu
+{
+    display: inline;
+    padding: 4px;
+    border-left-style: solid;
+    border-left-width: 1px;
+    border-left-color: #FFFFFF;
+}
+
+.menutitle
+{
+    border-style: solid;
+    border-left-width: 6px;
+    border-top-width: 0px;
+    border-bottom-width: 1px;
+    border-right-width: 0px;
+    border-color: #FFCC33;
+    padding: 2%;
+    width: 96%;
+    color: #FFFFFF;
+}
+
+.mainview
+{
+    width: 90%;
+    height: 81%;
+    padding: 5%;
+}
+
+.content
+{
+    display: none;
+}
+
+.logintable
+{
+    margin: 3%;
+    padding: 2%;
+    background-color: #FFCCCC;
+    color: #000000;
+    width: 94%;
+}
+
+.logintable td
+{
+    padding: 8px;
+}
+
+.control
+{
+    text-align: center;
+    width: 100%;
+    margin-top: 5%;
+}
+
+.control input
+{
+    width: 90%;
+    padding-left: 5%;
+    padding-right: 5%;
+    padding-top:4px;
+    padding-bottom: 4px;
+}
+
+.versioninfo
+{
+    width: 90%;
+    background-color: #CC66FF;
+    color: #000000;
+    padding: 16px;
+}
