@@ -21,7 +21,9 @@ var targeturl = {
     sdgvt: baseurl[sdgvt] + "iidxac23/"
 }
 
-var _VERSION = 23;
+var _VERSION_ = 23;
+
+var _GET_INTERVAL_ = 200;
 
 var clearlamp = {
     "FULL COMBO": 7,

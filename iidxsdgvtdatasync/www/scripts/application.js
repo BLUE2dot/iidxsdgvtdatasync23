@@ -1,5 +1,5 @@
 ﻿var app = new (function (_global) {
-    var lastversion = _VERSION;
+    var lastversion = _VERSION_;
     var version = 0;
     var count = 0;
     var songcount = 0;
@@ -62,7 +62,7 @@
         {
             // データ同期処理開始
             log.write(_LOG_INFORMATION_, "データ同期処理を開始します。");
-            timer = setInterval(execute, 200);
+            timer = setInterval(execute, _GET_INTERVAL_);
         }
         log.write(_LOG_DEBUG_,"start() end");
     }
