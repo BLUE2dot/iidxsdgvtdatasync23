@@ -98,6 +98,7 @@
             this.value = "処理中..."
             var object = this;
             _("control.cancel").disabled = false;
+            showMessage("同期しています");
 
             // 進捗プログレスバー
             var progresstable = document.createElement("table");
@@ -162,7 +163,7 @@
 
             _("progressview").appendChild(progresstable);
 
-            var vmax = 23;
+            var vmax = _VERSION_;
             var timer = setInterval(function () {
                 if (app.getStatus() != _RUNNING_) {
                     clearInterval(timer);
@@ -250,7 +251,7 @@
         _div.style.display = "block";
         _div.style.position = "absolute";
         _div.style.left = "5%";
-        _div.style.top = "85%";
+        _div.style.top = "87%";
         _div.style.textAlign = "center";
         layer.appendChild(_div);
 
