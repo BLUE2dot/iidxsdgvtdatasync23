@@ -10,8 +10,8 @@
     function onDeviceReady() {
         // Cordova の一時停止を処理し、イベントを再開します
         document.addEventListener( 'pause', onPause.bind( this ), false );
-        document.addEventListener( 'resume', onResume.bind( this ), false );
-        
+        document.addEventListener('resume', onResume.bind(this), false);
+
         // TODO: Cordova が読み込まれました。ここで、Cordova を必要とする初期化を実行します。
         initialize();
     };
@@ -34,6 +34,7 @@
             _("control.saveid").disabled = false;
             _("control.removeid").disabled = true;
             _("control.run").disabled = true;
+            _("control.viewscore").disabled = true;
         }
         else
         {
@@ -41,44 +42,50 @@
             _("control.saveid").disabled = true;
             _("control.removeid").disabled = false;
             _("control.run").disabled = false;
+            _("control.viewscore").disabled = false;
         }
         _("control.cancel").disabled = true;
 
         _("control.saveid").addEventListener('click', function () {
-            var userid = _("userid").value;
-            var password = _("password").value;
+            try {
+                var userid = _("userid").value;
+                var password = _("password").value;
 
-            var http = new XMLHttpRequest();
-            http.open("POST", targeturl.sdgvt + "login.php", false);
-            http.setRequestHeader("content-type", "application/x-www-form-urlencoded");
-            http.send("userid=" + encodeURIComponent(userid) + "&password=" + encodeURIComponent(password));
-            var xml = http.responseXML;
-            var root = xml.getElementsByTagName("login")[0];
+                var http = new XMLHttpRequest();
+                http.open("POST", targeturl.sdgvt + "login.php", false);
+                http.setRequestHeader("content-type", "application/x-www-form-urlencoded");
+                http.send("userid=" + encodeURIComponent(userid) + "&password=" + encodeURIComponent(password));
+                var xml = http.responseXML;
+                var root = xml.getElementsByTagName("login")[0];
 
-            var status = eval(root.getElementsByTagName("status")[0].firstChild.nodeValue);
+                var status = eval(root.getElementsByTagName("status")[0].firstChild.nodeValue + "");
 
-            if (status) {
-                userid = root.getElementsByTagName("userid")[0].firstChild.nodeValue;
+                if (status) {
+                    userid = root.getElementsByTagName("userid")[0].firstChild.nodeValue;
+                }
+                else {
+                    userid = null;
+                    showMessage("ログインに失敗しました", _LOG_ERROR_);
+                }
+
+                if (userid && password) {
+                    http.open("GET", targeturl.sdgvt + "logout.php", false);
+                    http.send();
+                    storage.setItem('userid', userid);
+                    storage.setItem('password', password);
+
+                    _("loginregist").style.display = 'none';
+                    _("control.saveid").disabled = true;
+                    _("control.removeid").disabled = false;
+                    _("control.run").disabled = false;
+                    _("userid").value = "";
+                    _("password").value = "";
+
+                    showMessage("ログイン情報を保存しました");
+                }
             }
-            else {
-                userid = null;
-                showMessage("ログインに失敗しました", _LOG_ERROR_);
-            }
-
-            if (userid && password) {
-                http.open("GET", targeturl.sdgvt + "logout.php", false);
-                http.send();
-                storage.setItem('userid', userid);
-                storage.setItem('password', password);
-
-                _("loginregist").style.display = 'none';
-                _("control.saveid").disabled = true;
-                _("control.removeid").disabled = false;
-                _("control.run").disabled = false;
-                _("userid").value = "";
-                _("password").value = "";
-
-                showMessage("ログイン情報を保存しました");
+            catch (e) {
+                showMessage("システムエラーが発生しました(" + e.description + ")");
             }
         }, false);
 
@@ -173,6 +180,7 @@
 
                     if (app.getStatus() == _ERROR_) {
                         if (!app.eamusement()) {
+                            showMessage("同期処理を中止しました")
                             eamusement();
                         }
                         else {
@@ -199,7 +207,26 @@
         _("control.cancel").addEventListener('click', function () {
             app.cancel();
             showMessage("同期処理を中止しました");
-        });
+        }, false);
+
+        _("control.viewscore").addEventListener('click', function () {
+            (function () {
+                var storage = localStorage;
+                window.open(targeturl[sdgvt] + "score.mobile.html?userid=" + storage.getItem("userid"));
+            })();
+        }, false);
+
+        if (AdMob)
+        {
+            AdMob.createBanner({
+                adId: _ADMOB_DEFAULT_,
+                position: AdMob.AD_POSITION.BOTTOM_CENTER,
+                isTesting: false, // TODO: remove this line when release
+                overlap: false,
+                offsetTopBar: false,
+                bgColor: 'black'
+            });
+        }
 
         _("content.main").style.display = 'block';
     }

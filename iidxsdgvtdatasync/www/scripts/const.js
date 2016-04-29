@@ -14,7 +14,7 @@ var sdgvt = "sdgvt";
 
 var baseurl = {
     konami: "http://p.eagate.573.jp/game/2dx/",
-    sdgvt: "http://carnation.flowers.home/"
+    sdgvt: "http://felice.dip.jp/"
 }
 var targeturl = {
     konami: baseurl[konami] + "23/",
@@ -24,6 +24,9 @@ var targeturl = {
 var _VERSION_ = 23;
 
 var _GET_INTERVAL_ = 200;
+var _NETWORK_TIMEOUT_ = 60000;
+
+var _ADMOB_DEFAULT_ = "ca-app-pub-8045595074870452/1482327555";
 
 var clearlamp = {
     "FULL COMBO": 7,

@@ -6,7 +6,7 @@
     var status = _STOP_;
     var songdic = {};
     var log = new Log();
-    log.setLevel(_LOG_WARNING_);
+    log.setLevel(_LOG_DEBUG_);
 	
     // IIDX SDGVT ユーザID
     var userid = null;
@@ -40,30 +40,7 @@
         }
 		
         status = _RUNNING_;
-        songdic = getSongDic();
-        if( songdic == null )
-        {
-            message = "曲データ辞書の取得に失敗しました。";
-            log.write(_LOG_ERROR_, message);
-            status = _ERROR_;
-            return;
-        }
-		
-        userid = loginCheck();
-        if( userid == null )
-        {
-            message = "IIDX ScoreDataGraphicalViewTool にログインできません。";
-            log.write(_LOG_ERROR_, message);
-            status = _ERROR_;
-            return;
-        }
-		
-        if( timer == null )
-        {
-            // データ同期処理開始
-            log.write(_LOG_INFORMATION_, "データ同期処理を開始します。");
-            timer = setInterval(execute, _GET_INTERVAL_);
-        }
+        getSongDic();
         log.write(_LOG_DEBUG_,"start() end");
     }
 	
@@ -71,19 +48,14 @@
     this.cancel = function()
     {
         log.write(_LOG_DEBUG_, "cancel() start");
-        if( timer != null )
-        {
-            // タイマー停止
-            log.write(_LOG_INFORMATION_, "データ同期処理を中止します。");
-            clearInterval(timer);
-            timer = null;
-        }
+        log.write(_LOG_INFORMATION_, "データ同期処理を中止します。");
 		
         status = _STOP_;
         version = 0;
         count = 0;
         songcount = 0;
         log.write(_LOG_DEBUG_, "cancel() end");
+        //senddata("");
     }
 	
     // 処理状態の取得
@@ -106,6 +78,7 @@
     // エラーメッセージの取得
     this.getError = function()
     {
+        //senddata("" + version);
         return message;
     }
 	
@@ -129,16 +102,27 @@
 		
         return logtext;
     }
+
+    // ネットワークエラー処理
+    function networkError() {
+        status = _ERROR_;
+        log.write(_LOG_ERROR_, "通信エラーが発生しました");
+        wait = false;
+        version = 0;
+        count = 0;
+        songcount = 0;
+        return;
+    };
+
 	
     // 実行本体(タイマー起動)
     function execute()
     {
         log.write(_LOG_DEBUG_, "execute() start");
-        if( wait )
+
+        if (wait)
         {
-            log.write(_DEBUG_,"前回のタイマー処理を実行中です。")
-            log.write(_LOG_DEBUG_, "execute() end");
-            // 処理中の場合は何もしない
+            log.write(_LOG_DEBUG_, "通信応答待ちです");
             return;
         }
 		
@@ -146,10 +130,19 @@
         if( status == _ERROR_ )
         {
             log.write(_LOG_ERROR_, "エラーのためデータ同期処理を中止します。");
-            clearInterval(timer);
-            timer = null;
             version = 0;
             count = 0;
+            songcount = 0;
+            return;
+        }
+
+        // 中止判定
+        if (status == _STOP_)
+        {
+            log.write(_LOG_DEBUG_, "ユーザー操作によりデータ同期処理を中止します。");
+            version = 0;
+            count = 0;
+            songcount = 0;
             return;
         }
 		
@@ -158,26 +151,24 @@
         {
             // 対象バージョンの曲を処理完了
             log.write(_LOG_INFORMATION_, "次のバージョンの処理を開始します。");
-			
+
             // 最終バージョン判定
             if( lastversion <= version )
             {
                 log.write(_LOG_INFORMATION_, "最終バージョンまで処理が完了しましたため終了します。");
-                // タイマー停止
-                clearInterval(timer);
-                timer = null;
                 version = 0;
                 count = 0;
+                songcount = 0;
                 status = _COMPLETE_;
+                return;
             }
             else
             {
                 // 曲一覧の取得
                 count = 0;
+                songcount = 0;
                 getSongList();
 				
-                // バージョン番号の加算
-                version++;
             }
         }
         else
@@ -194,93 +185,107 @@
     }
 	
     // 曲一覧の取得
-    function getSongList()
+    function getSongList(pagecount)
     {
         log.write(_LOG_DEBUG_, "getSongList() start");
-        songcount = 0;
+
+        pagecount = (pagecount || 1);
+        pagecount = (pagecount < 1) ? 1 : pagecount;
+
         wait = true;
 		
-        // ページめくり
-        var flag = true;
-        var pagecount = 1;
-
-        while( flag )
-        {
-            var http = new XMLHttpRequest();
+        var http = new XMLHttpRequest();
 		
-            // 曲一覧ページアクセス
-            var url;
-            url = targeturl[konami] + "p/djdata/music.html?list=" + version + "&play_style=0&s=1&page=" + pagecount;
+        // 曲一覧ページアクセス
+        var url;
+        url = targeturl[konami] + "p/djdata/music.html?list=" + version + "&play_style=0&s=1&page=" + pagecount;
 
-            log.write(_LOG_DEBUG_, url);
-            http.open("GET",url,false);
-            http.send();
-            var page = http.responseText;
-			
-            // ログイン状態確認
-            var check = "gate/p/login.html";
-            if( -1 < page.indexOf(check) )
+        log.write(_LOG_DEBUG_, url);
+        http.timeout = _NETWORK_TIMEOUT_;
+        http.open("GET", url, true);
+        http.ontimeout = networkError;
+        http.onreadystatechange = function()
+        {
+            if (http.readyState == 4)
             {
-                message = "eAMUSEMENT にログインしていません。";
-                status = _ERROR_;
-                log.write(_LOG_ERROR_, message);
-                log.write(_LOG_DEBUG_, "getSongList() end");
-                eamusement = false;
-                wait = false;
-                return;
-            }
-            eamusement = true;
-            log.write(_LOG_DEBUG_, "eAMUSEMENT へのログインを確認しました。");
+                var page = http.responseText;
 
-            // <body>要素のみ抽出
-            var cutStart = page.indexOf("<body>");
-            var cutEnd = page.indexOf("</body>");
-            page = page.substring(cutStart,cutEnd+"</body>".length);
-
-            // 曲データ数確認
-            log.write(_LOG_DEBUG_, "曲数確認開始");
-            var keyword = "p/djdata/music_info.html?index=";
-            var pos = 0;
-            while( -1 < pos )
-            {
-                pos = page.indexOf(keyword,pos);
-                log.write(_LOG_DEBUG_, "pos = " + pos);
-                if( 0 < pos )
-                {
-                    songcount++;
-                    pos++;
+                // ログイン状態確認
+                var check = "gate/p/login.html";
+                if (-1 < page.indexOf(check)) {
+                    message = "eAMUSEMENT にログインしていません。";
+                    status = _ERROR_;
+                    log.write(_LOG_ERROR_, message);
+                    log.write(_LOG_DEBUG_, "getSongList() end");
+                    eamusement = false;
+                    wait = false;
+                    return;
                 }
-            }
-            log.write(_LOG_DEBUG_, "songcount = " + songcount);
-			
-            // 次ページ検索
-            var nextPageTag = page.indexOf("NEXT&gt;");
-            if( nextPageTag < 0 )
-            {
-                log.write(_LOG_DEBUG_, "最終ページ");
-                // 次ページ無し
-                flag = false;
-            }
-            else
-            {
-                var check = page.substr(nextPageTag+"NEXT&gt;".length,4);
-                if( check == "</a>" )
-                {
-                    log.write(_LOG_DEBUG_, "次ページリンクが存在");
-                    // 次ページ有り
-                    pagecount++;
+                eamusement = true;
+                log.write(_LOG_DEBUG_, "eAMUSEMENT へのログインを確認しました。");
+
+                // <body>要素のみ抽出
+                var cutStart = page.indexOf("<body>");
+                var cutEnd = page.indexOf("</body>");
+                page = page.substring(cutStart, cutEnd + "</body>".length);
+
+                // 曲データ数確認
+                log.write(_LOG_DEBUG_, "曲数確認開始");
+                var keyword = "p/djdata/music_info.html?index=";
+                var pos = 0;
+                while (-1 < pos) {
+                    pos = page.indexOf(keyword, pos);
+                    log.write(_LOG_DEBUG_, "pos = " + pos);
+                    if (0 < pos) {
+                        songcount++;
+                        pos++;
+                    }
                 }
-                else
-                {
+                log.write(_LOG_DEBUG_, "songcount = " + songcount);
+
+                // ページめくり
+                var flag = false;
+
+                // 次ページ検索
+                var nextPageTag = page.indexOf("NEXT&gt;");
+                if (nextPageTag < 0) {
                     log.write(_LOG_DEBUG_, "最終ページ");
                     // 次ページ無し
                     flag = false;
                 }
+                else {
+                    var check = page.substr(nextPageTag + "NEXT&gt;".length, 4);
+                    if (check == "</a>") {
+                        log.write(_LOG_DEBUG_, "次ページリンクが存在");
+                        // 次ページ有り
+                        flag = true;
+                    }
+                    else {
+                        log.write(_LOG_DEBUG_, "最終ページ");
+                        // 次ページ無し
+                        flag = false;
+                    }
+                }
+
+                // ページめくりの有無により分岐
+                if (flag)
+                {
+                    // 次のページへ
+                    setTimeout(function () {
+                        getSongList(pagecount + 1);
+                    }, _GET_INTERVAL_);
+                }
+                else
+                {
+                    log.write(_LOG_DEBUG_, "曲数確認完了 songcount = " + songcount);
+                    // バージョン番号の加算
+                    version++;
+                    setTimeout(execute, _GET_INTERVAL_);
+                }
+                wait = false;
             }
         }
-        log.write(_LOG_DEBUG_, "曲数確認完了 songcount = " + songcount);
-		
-        wait = false;
+        http.send();
 
         log.write(_LOG_DEBUG_, "getSongList() end");
     }
@@ -298,28 +303,35 @@
         url = targeturl[konami] + "p/djdata/music_info.html?index=" + index;
 		
         log.write(_LOG_DEBUG_, url);
-        http.open("GET",url,false);
+        http.open("GET", url, true);
+        http.timeout = _NETWORK_TIMEOUT_;
+        http.ontimeout = networkError;
+        http.onreadystatechange = function ()
+        {
+            if(http.readyState == 4)
+            {
+                // <body>要素のみ抽出
+                var page = http.responseText;
+                cutStart = page.indexOf("<body>");
+                cutEnd = page.indexOf("</body>");
+                page = page.substring(cutStart + "<body>".length, cutEnd);
+
+                try {
+                    parsePage(page);
+                }
+                catch (e) {
+                    error = true;
+                    message = "解析失敗:対象[" + (version + 1) + "]" + url + "(" + e.description + ")";
+                    log.write(_LOG_DEBUG_, "解析失敗:対象[" + (version + 1) + "]" + url + "(" + e.description + ")");
+                    status = _ERROR_;
+                }
+
+                wait = false;
+                setTimeout(execute, _GET_INTERVAL_);
+            }
+        }
         http.send();
 		
-        // <body>要素のみ抽出
-        var page = http.responseText;
-        cutStart = page.indexOf("<body>");
-        cutEnd = page.indexOf("</body>");
-        page = page.substring(cutStart + "<body>".length, cutEnd);
-		
-        try
-        {
-            parsePage(page);
-        }
-        catch(e)
-        {
-            error = true;
-            message = "解析失敗:対象[" + (version + 1) + "]"+ url + "(" + e.description + ")";
-            log.write(_LOG_DEBUG_, "解析失敗:対象[" + (version + 1) + "]" + url + "(" + e.description + ")");
-            status = _ERROR_;
-        }
-
-        wait = false;
     }
 
     // debug
@@ -431,28 +443,107 @@
     function loginCheck()
     {
         var storage = localStorage;
-        var userid = storage.getItem('userid');
-        var password = storage.getItem('password');
 
         var http = new XMLHttpRequest();
         var url = targeturl[sdgvt] + "login.php";
-        http.open("POST", url, false);
+        http.timeout = _NETWORK_TIMEOUT_;
+        http.open("POST", url, true);
+        http.ontimeout = networkError;
+        http.onreadystatechange = function()
+        {
+            if (http.readyState == 4)
+            {
+                var xml = http.responseXML;
+                var root = xml.getElementsByTagName("login")[0];
+
+                var login = root.getElementsByTagName("status")[0].firstChild.nodeValue;
+
+                if (login == "true") {
+                    userid = root.getElementsByTagName("userid")[0].firstChild.nodeValue;
+
+                    // IIDX SDGVT のログイン正常終了
+
+                    // 次処理：データ同期開始
+                    log.write(_LOG_INFORMATION_, "データ同期処理を開始します。");
+                    timer = setTimeout(execute, _GET_INTERVAL_);
+                }
+                else {
+                    message = "IIDX SDGVT にログインできませんでした";
+                    status = _ERROR_;
+                    return null;
+                }
+            }
+        }
         http.setRequestHeader("content-type", "application/x-www-form-urlencoded");
-        http.send("userid=" + encodeURIComponent(userid) + "&password=" + encodeURIComponent(password));
+        http.send("userid=" + encodeURIComponent(storage.getItem('userid')) + "&password=" + encodeURIComponent(storage.getItem('password')));
 		
-        var xml = http.responseXML;
-        var root = xml.getElementsByTagName("login")[0];
-		
-        var status = root.getElementsByTagName("status")[0].firstChild.nodeValue;
-		
-        if(status == "true")
-        {
-            return root.getElementsByTagName("userid")[0].firstChild.nodeValue;
+    }
+
+    function getSongDic() {
+        songdic = {};
+        var url = targeturl[sdgvt] + "getsongdic.php";
+
+        // 新着情報取得
+        console.log("曲データ辞書取得");
+        var http = new XMLHttpRequest();
+        http.timeout = _NETWORK_TIMEOUT_;
+        http.open("GET", url, true);
+        http.ontimeout = networkError;
+        http.onreadystatechange = function () {
+            if (http.readyState == 4) {
+                if (400 <= http.status) {
+                    message = http.status + "通信エラー";
+                    log.write(_LOG_ERROR_, message);
+                    status = _ERROR_;
+                    return;
+                }
+
+                var xml = http.responseXML;
+
+                try {
+                    // 新着情報ルートノードの取得
+                    var root = xml.getElementsByTagName("songiddic")[0];
+
+                    // ルートノード確認
+                    if (!root) {
+                        // ルートノードが取得できない場合
+                        message = "データの取得に失敗しました";
+                        log.write(_LOG_ERROR_, message);
+                        status = _ERROR_;
+                        return null;
+                    }
+                    else {
+                        // <song>タグの配列を取得
+                        var records = root.getElementsByTagName("song");
+
+                        // ループ用変数
+                        var index;
+                        var maxRecords = records.length;
+
+                        for (index = 0; index < maxRecords; index++) {
+                            // 曲名
+                            var songname = records[index].getElementsByTagName("songname")[0].firstChild.nodeValue;
+
+                            // 曲ID
+                            var songid = records[index].getElementsByTagName("songid")[0].firstChild.nodeValue;
+
+                            songdic[songname] = songid;
+                        }
+                    }
+
+                    // 曲辞書作成正常終了
+
+                    // 次処理：IIDX SDGVT へのログイン
+                    loginCheck();
+                }
+                catch (e) {
+                    message = "曲データ辞書の取得に失敗しました。" + e.description;
+                    log.write(_LOG_ERROR_, message);
+                    status = _ERROR_;
+                }
+            }
         }
-        else
-        {
-            return null;
-        }
+        http.send();
     }
 
     function getClearLamp(filename)
@@ -469,6 +560,7 @@
 
     function putScoreData(songid, style, mode, exscore, clearcode, misscount, userid)
     {
+        log.write(_LOG_DEBUG_, "putScoreData() start");
         var query = "songid=" + encodeURI(songid) + "&playstyle=" + encodeURI(style) + "&mode=" + encodeURI(mode) + "&exscore=" + encodeURI(exscore) + "&clearlamp=" + encodeURI(clearcode) + "&userid=" + encodeURI(userid);
         if( misscount != "-" && misscount != "--" )
         {
@@ -477,10 +569,13 @@
 		
         var url = targeturl[sdgvt] + "updatescoredata.php";
 		
+        log.write(_LOG_DEBUG_, url);
+        log.write(_LOG_DEBUG_, query);
         var http = new XMLHttpRequest();
-        http.open("POST", url, false);
+        http.open("POST", url, true);
         http.setRequestHeader("content-type", "application/x-www-form-urlencoded");
         http.send(encodeURI(query));
+        log.write(_LOG_DEBUG_, "putScoreData() end");
     }
 
     function getExScore( exscore )

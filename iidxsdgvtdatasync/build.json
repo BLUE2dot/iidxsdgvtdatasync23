@@ -1,11 +1,11 @@
 {
      "android": {
-         "release": {
-             "keystore": "",
-             "storePassword": "",
-             "alias": "",
-             "password" : "",
-             "keystoreType": ""
-         }
+      "release": {
+        "alias": "iidxsdgvt",
+        "keystore": "res/keystore/iidxsdgvt.keystore",
+        "keystoreType": "",
+        "password": "hello!iidxsdgvt",
+        "storePassword": "hello!iidxsdgvt"
+      }
      }
  }

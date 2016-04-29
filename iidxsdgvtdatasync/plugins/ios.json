@@ -1,0 +1,22 @@
+{
+    "prepare_queue": {
+        "installed": [],
+        "uninstalled": []
+    },
+    "config_munge": {
+        "files": {}
+    },
+    "installed_plugins": {
+        "cordova-plugin-whitelist": {
+            "PACKAGE_NAME": "io.cordova.myapp329e4c"
+        },
+        "cordova-plugin-admobpro": {
+            "PACKAGE_NAME": "io.cordova.myapp329e4c"
+        }
+    },
+    "dependent_plugins": {
+        "cordova-plugin-extension": {
+            "PACKAGE_NAME": "io.cordova.myapp329e4c"
+        }
+    }
+}
