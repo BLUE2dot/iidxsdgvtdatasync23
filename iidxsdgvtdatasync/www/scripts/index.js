@@ -31,6 +31,7 @@
         var password = storage.getItem("password");
         if (!userid || !password) {
             _("loginregist").style.display = 'block';
+            _("control.newuser").disabled = false;
             _("control.saveid").disabled = false;
             _("control.removeid").disabled = true;
             _("control.run").disabled = true;
@@ -39,6 +40,8 @@
         else
         {
             _("loginregist").style.display = 'none';
+            _("control.newuser").disabled = true;
+            _("control.newuser").style.display = 'none';
             _("control.saveid").disabled = true;
             _("control.removeid").disabled = false;
             _("control.run").disabled = false;
@@ -46,13 +49,17 @@
         }
         _("control.cancel").disabled = true;
 
+        _("control.newuser").addEventListener('click', function () {
+            window.open(targeturl[sdgvt] + "newuser.html");
+        }, false);
+
         _("control.saveid").addEventListener('click', function () {
             try {
                 var userid = _("userid").value;
                 var password = _("password").value;
 
                 var http = new XMLHttpRequest();
-                http.open("POST", targeturl.sdgvt + "login.php", false);
+                http.open("POST", targeturl[sdgvt] + "login.php", false);
                 http.setRequestHeader("content-type", "application/x-www-form-urlencoded");
                 http.send("userid=" + encodeURIComponent(userid) + "&password=" + encodeURIComponent(password));
                 var xml = http.responseXML;
@@ -69,15 +76,18 @@
                 }
 
                 if (userid && password) {
-                    http.open("GET", targeturl.sdgvt + "logout.php", false);
+                    http.open("GET", targeturl[sdgvt] + "logout.php", false);
                     http.send();
                     storage.setItem('userid', userid);
                     storage.setItem('password', password);
 
                     _("loginregist").style.display = 'none';
+                    _("control.newuser").disabled = true;
+                    _("control.newuser").style.display = 'none';
                     _("control.saveid").disabled = true;
                     _("control.removeid").disabled = false;
                     _("control.run").disabled = false;
+                    _("control.viewscore").disabled = false;
                     _("userid").value = "";
                     _("password").value = "";
 
@@ -93,9 +103,12 @@
             storage.removeItem('userid');
             storage.removeItem('userid');
             _("loginregist").style.display = 'block';
+            _("control.newuser").disabled = false;
+            _("control.newuser").style.display = '';
             _("control.saveid").disabled = false;
             _("control.removeid").disabled = true;
             _("control.run").disabled = true;
+            _("control.viewscore").disabled = true;
         }, false);
 
         _("control.run").addEventListener('click', function () {

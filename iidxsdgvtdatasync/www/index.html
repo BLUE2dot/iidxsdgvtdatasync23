@@ -6,7 +6,7 @@
         必要に応じて、次のメタ タグでコンテンツ セキュリティ ポリシーをカスタマイズします。default-src に 'unsafe-inline' を追加して、インライン JavaScript を有効にします。
         詳細については、http://go.microsoft.com/fwlink/?LinkID=617521 を参照してください。
     -->
-        <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *">
+        <meta http-equiv="Content-Security-Policy" content="default-src * data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src * 'unsafe-inline'; media-src *">
         
         <meta name="format-detection" content="telephone=no">
         <meta name="msapplication-tap-highlight" content="no">
@@ -24,7 +24,7 @@
                 <div id="content.main" class="content">
                     <div class="menutitle">データ同期</div>
                     <div id="loginregist">
-                        スコアツール側のログイン情報を保存してください。
+                        <a href="http://felice.dip.jp/iidxac23/newuser.html" id="link.newuser">スコアツール</a>側のログイン情報を保存してください。
                         <table id="logintable" class="logintable">
                             <tbody>
                                 <tr>
@@ -37,6 +37,9 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                    <div class="control">
+                        <input type="button" value="スコアツールに新規登録する" id="control.newuser" />
                     </div>
                     <div class="control">
                         <input type="button" value="ログイン情報を保存する" id="control.saveid" />
